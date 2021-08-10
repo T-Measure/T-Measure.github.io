@@ -1,0 +1,42 @@
+pattern AuthenticatorPattern
+proofOfId : Class in: Class.all.select(s|s.getAppliedStereotypes().name.includes("Authenticator::ProofOfId")),
+authenticator : Class in: Class.all.select(s|s.getAppliedStereotypes().name.includes("Authenticator::Authenticator")),
+authenticationInfo : Class in: Class.all.select(s|s.getAppliedStereotypes().name.includes("Authenticator::AuthenticationInformation")),
+createProofId : Association in: Association.all.select(s| s.memberEnds.getTypes().includesAll(Sequence{proofOfId,authenticator})),
+verifyAuthInfo : Association in: Association.all.select(s| s.memberEnds.getTypes().includesAll(Sequence{authenticationInfo,authenticator})) 
+
+
+
+
+{
+  	onmatch { 
+        "//// Matched: Authenticator Pattern".println();
+	      proofOfId.name.println("ProofOfId Entity: ");
+	      authenticator.name.println("Authenticator Entity: ");
+	      authenticationInfo.name.println("AuthenticationInfo Entity: ");
+	      createProofId.memberEnds.name.println("Association between: ");
+	      verifyAuthInfo.memberEnds.name.println("Association between: ");
+    }
+    
+    nomatch {
+        "//// Not Matched: Authenticator Pattern".println();
+  	
+  	}
+  	
+  	do {
+  	      
+   	} 
+}
+
+
+
+operation Collection getTypes(): OrderedSet
+{
+	var types = OrderedSet{};
+	for (item in self)
+	{
+		types.add(item.type);
+	}
+	
+	return types;
+}

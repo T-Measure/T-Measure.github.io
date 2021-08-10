@@ -1,0 +1,34 @@
+pattern RoleBasedAccessControl
+role : Class in: Class.all.select(s|s.getAppliedStereotypes().name.includes("RoleBasedAccessControl::Role")),
+right : Class in: Class.all.select(s|s.getAppliedStereotypes().name.includes("RoleBasedAccessControl::Right")), 
+verify : Association in: Association.all.select(s| s.memberEnds.getTypes().includesAll(Sequence{role,right})) 
+{
+  
+  
+  	onmatch { 
+        "//// Matched: Role-Based Access Control".println();
+	      role.name.println("Role Entity: ");
+	      right.name.println("Right Entity: ");
+	      verify.memberEnds.name.println("Association between: ");
+    }
+    
+    nomatch {
+        "//// Not Matched: Role-Based Access Control".println();
+  	}
+  	
+  	do {
+      	
+   	}
+   
+}
+
+operation Collection getTypes(): OrderedSet
+{
+	var types = OrderedSet{};
+	for (item in self)
+	{
+		types.add(item.type);
+	}
+	
+	return types;
+}

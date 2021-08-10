@@ -1,0 +1,26 @@
+<project default="main">
+    <target name="main">
+    	<epsilon.loadModel name="ie.lero.ata.epsilon.example1" type="EMF">
+    	    <parameter name="modelFile" value="/ie.lero.ata.epsilon.example1/model/mymodel.uml"/>
+    		<parameter name="metamodelUri" value="http://www.eclipse.org/uml2/5.0.0/UML/Profile/Standard"/>
+    		
+    	    <parameter name="isMetamodelFileBased" value="true"/>
+    	    <parameter name="readOnLoad" value="true"/>
+    	</epsilon.loadModel>
+
+        <epsilon.epl src="epsilon/epl/patternAuthenticator.epl" exportAs="PatternAuthenticator">
+            <model ref="ie.lero.ata.epsilon.example1"/>
+        </epsilon.epl> 
+    	
+    	<epsilon.epl src="epsilon/epl/patternRoleBasedAccessControl.epl" exportAs="PatternRoleBasedAccessControl">
+            <model ref="ie.lero.ata.epsilon.example1"/>
+        </epsilon.epl> 
+		
+    	<epsilon.evl src="epsilon/evl/checkAuthorization.evl"> 
+    		<model ref="ie.lero.ata.epsilon.example1"/>
+    		
+    		<model ref="PatternAuthenticator"/>
+    		<model ref="PatternRoleBasedAccessControl"/>
+        </epsilon.evl>
+    </target>
+</project>

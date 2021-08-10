@@ -1,0 +1,117 @@
+
+
+
+pre {
+	var restrictedResources = Class.all.select(s|s.getAppliedStereotypes().name.includes("Restricted"));	
+	var classes = Class.all;
+	var associations = Association.all;
+	var usages = Usage.all;
+	
+	var classConnections = Map{};
+	for (association in associations){
+		var memberEnds = association.memberEnds.getTypes();
+		for (class in memberEnds){
+			if (not(classConnections.containsKey(class))){
+				classConnections.put(class, OrderedSet{});
+			}
+			var memberEndsMinusSelf=memberEnds.excluding(class);
+			classConnections.get(class).addAll(memberEndsMinusSelf);
+		}
+	}
+		
+	for (usage in usages){
+		if (not(classConnections.containsKey(usage.client.first()))){
+			classConnections.put(usage.client.first(), OrderedSet{});
+		}
+		classConnections.get(usage.client.first()).add(usage.supplier.first());
+	}
+}
+
+context Class {
+	constraint ProtectingRestrictedData {
+		guard: self.getAppliedStereotypes().name.includes("User")
+		
+		check: self.noAccessToAnyRestrictedResourceWithoutAuthorization()  	
+		
+		message: "///////////ERROR Constraint ProtectingRestrictedData: User "+self.name+
+					" is Connected to a protected resource without authorization pattern."
+	}
+}
+
+
+operation Class noAccessToAnyRestrictedResourceWithoutAuthorization() : Boolean {
+	if (self.accessRestrictedResourceWithoutAuthorization()){
+		return false;
+	}
+	return true;
+}
+
+
+operation Class accessRestrictedResourceWithoutAuthorization() : Boolean {
+	var queue = Sequence{self};
+	var visited=Sequence{};
+	
+	while (queue.size()>0)
+	{
+		var current=queue.first();
+		queue.remove(current);
+		visited.add(current);
+		
+		if (restrictedResources.includes(current))
+		{
+			return true;
+		}
+		
+		if(current.isInAuthorizationPatterns())
+		{
+			continue;
+		}
+		
+		for (class in classConnections.get(current)){
+			if (visited.includes(class) or queue.includes(class))
+			{
+				continue;
+			}
+			queue.add(class);			
+		}
+	}
+	return false;
+	
+	
+}
+
+
+
+operation Any isInAuthorizationPatterns() : Boolean {
+	
+	
+	for (stereotype: String in self.getAppliedStereotypes().name){
+		if (stereotype.startsWith("RoleBasedAccessControl::")){
+			return true;
+		}
+	}	
+  	return false;
+}
+
+operation Collection getTypes(): OrderedSet
+{
+	var types = OrderedSet{};
+	for (item in self)
+	{
+		types.add(item.type);
+	}
+	
+	return types;
+}
+
+
+operation Collection getStereotypes(): OrderedSet
+{
+	var stereotypes = OrderedSet{};
+	for (item in self)
+	{
+		stereotypes.addAll(item.getAppliedStereotypes().name);
+	}
+	
+	return stereotypes;
+}
